@@ -3,7 +3,7 @@ import { db, hasDb } from "./supabase";
 import { askJson, booVoice, hasAi, tidy } from "./gemini";
 import { contestsWithMatches, getActiveSpot, recentPhotoContext, spotsForDate, toSpot } from "./data";
 import { dayWeather } from "./weather";
-import { fromMinutes, isWeekend, toMinutes } from "./time";
+import { addDays, fromMinutes, isWeekend, toMinutes } from "./time";
 import type { Profile, Spot } from "./types";
 
 type Draft = {
@@ -78,7 +78,7 @@ Open contests with no matching photo yet (prefer one of these themes, as long as
 ${unmatched.map((x) => `- id ${x.id}: "${x.name}", theme "${x.theme}", deadline ${x.deadline}`).join("\n") || "- none"}
 
 Personal theme: none.
-Don't repeat any of these spots: ${avoid.join("; ") || "none"}.
+Recent and already-swapped spots: ${avoid.join("; ") || "none"}. Don't repeat any of these or anything close to them; pick a clearly different idea.
 
 A spot is small and everyday. It makes an ordinary thing worth stopping for. Examples: "Find a long shadow", "Only reflections", "Something blue", "Look up". It should be something she can find without going anywhere special, and it can gently steer her away from what she already shoots a lot.
 Pick a best light window of about two hours that suits the spot and the weather, between sunrise and sunset. Long shadows and warm light mean the last two hours before sunset. Rain means reflections can be good any time.
@@ -130,13 +130,24 @@ export async function ensureSpot(profile: Profile, date: string): Promise<Spot |
   if (!hasDb()) return null;
   const existing = await getActiveSpot(profile, date);
   if (existing) return existing;
-  return insertSpot(profile, date, await draftSpot(profile, date, []));
+  return insertSpot(profile, date, await draftSpot(profile, date, await recentTitles(profile, date)));
+}
+
+// Spot titles from the few days before `date`, so days don't repeat.
+async function recentTitles(profile: Profile, date: string) {
+  const { data } = await db()
+    .from("spots")
+    .select("title")
+    .eq("profile_id", profile.id)
+    .gte("date", addDays(date, -3))
+    .lt("date", date);
+  return [...new Set((data ?? []).map((r) => r.title as string))];
 }
 
 export async function swapSpot(profile: Profile, date: string): Promise<Spot> {
-  const all = await spotsForDate(profile, date);
+  const [all, recent] = await Promise.all([spotsForDate(profile, date), recentTitles(profile, date)]);
   await db().from("spots").update({ status: "swapped" }).eq("profile_id", profile.id).eq("date", date).eq("status", "active");
-  return insertSpot(profile, date, await draftSpot(profile, date, all.map((s) => s.title)));
+  return insertSpot(profile, date, await draftSpot(profile, date, [...all.map((s) => s.title), ...recent]));
 }
 
 export async function setSpotStatus(profile: Profile, id: string, status: "active" | "skipped") {

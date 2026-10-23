@@ -43,5 +43,5 @@ if (!get("CRON_SECRET")) set("CRON_SECRET", randomBytes(24).toString("hex"));
 writeFileSync(ENV, env);
 console.log("Wrote Supabase URL, keys and CRON_SECRET to .env.local");
 
-sb("db", "query", "--project-ref", ref, "-f", new URL("../supabase/schema.sql", import.meta.url).pathname);
+sb("db", "query", "--linked", "--project-ref", ref, "-f", new URL("../supabase/schema.sql", import.meta.url).pathname);
 console.log("Applied supabase/schema.sql");

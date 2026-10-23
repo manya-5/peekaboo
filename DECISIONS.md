@@ -29,10 +29,13 @@ Short notes on calls I made while building, so you can change any of them.
 
 ## AI
 
-- **Model:** `gemini-flash-latest` by default, which is Google's alias for its current Flash model and accepts images. Override with `GEMINI_MODEL`.
+- **Model: Gemini 3.6 Flash** (`gemini-3.6-flash`). The newest Flash on your key is 3.8, but during the build it was overloaded, and its "busy" replies took up to 14 seconds. That made Boo's reaction take 42 seconds. 3.6 Flash reads a photo in about 1 to 3 seconds. If a model is busy or out of free quota, the app steps down to 3.5 Flash, then 3 Flash, and gives each try 15 seconds at most. To try 3.8 later, set `GEMINI_MODEL=gemini-3.8-flash` in Vercel.
+- **Light thinking.** Calls use Gemini's "low" thinking level. In testing it was about twice as fast and the lines were just as specific.
+- **Free tier limits.** Google's free tier allows a handful of requests per minute per model, which is plenty for one person. Spamming Swap can hit it. The model step-down covers most of that.
 - **JSON output** uses Gemini's structured output with a schema. Boo's rules go into the system prompt of every call. A small filter also strips emoji, exclamation marks and dashes, just in case.
 - **Repeat detection** sends Gemini the text descriptions and dates of your last 30 photos, not the images. It's quicker and cheaper, and good enough to spot "the bridge, again".
 - **Contest matching** saves a match only when Gemini says it clearly fits, with confidence of 0.6 or higher.
+- **No repeats.** A new spot avoids today's swapped spots and anything from the last three days, so Swap gives you a different idea and days don't repeat.
 - **Fallback spots.** If Gemini is down, the daily spot comes from a short built-in list, so Home always has a spot.
 - **Light window.** Gemini picks the window from that day's sunrise, sunset and weather. If its times don't make sense, the app falls back to the two hours before sunset. The light bar spans one window-length before to half a window after, which matches the design's 4 to 6 layout.
 
@@ -40,3 +43,9 @@ Short notes on calls I made while building, so you can change any of them.
 
 - **Vercel Cron** runs `/api/cron/daily` at 03:00 UTC (11pm in New York). It writes tomorrow's spot and keeps the free Supabase project awake. It checks the `CRON_SECRET`.
 - If the job hasn't run, Home creates today's spot the first time it's opened.
+
+## Scripts
+
+- `node scripts/connect-supabase.ts` finds the "peekaboo" project, writes its keys into `.env.local` and applies `supabase/schema.sql`.
+- `node --env-file=.env.local scripts/seed.ts` loads the October samples and contests.
+- `node --env-file=.env.local scripts/reset-demo.ts` removes photos you took and today's spots, so you can rehearse the demo from the start. It never touches the October samples.

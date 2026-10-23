@@ -13,7 +13,10 @@ type Result = {
 const SCHEMA = {
   type: "object",
   properties: {
-    subject: { type: "string", description: "The photo's main subject in one to three lowercase words, as she'd say it: 'bridge', 'mushroom', 'blue tram'." },
+    subject: {
+      type: "string",
+      description: "The single main subject of the photo in one or two lowercase words, as she'd say it: 'bridge', 'mushroom', 'tram'. One thing only, never 'x and y'.",
+    },
     matches: {
       type: "array",
       items: {
