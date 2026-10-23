@@ -11,15 +11,17 @@ export function photoAlt(p: Photo, tz: string) {
   return `${longDate(todayIn(tz, new Date(p.takenAt)))}, ${what.charAt(0).toLowerCase()}${what.slice(1)}`;
 }
 
-// The month as stickers, newest first. Shape and tilt follow the grid slot.
+// The month as stickers, newest first. Shape and tilt follow the photo's place
+// in the month (newest is 0), the way the designs lay them out.
 export function PhotoGrid({ items, tz, rowGap = 16, label }: { items: GridItem[]; tz: string; rowGap?: number; label: string }) {
+  let photoIndex = 0;
   return (
     <div
       aria-label={label}
       role="list"
       style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", rowGap, columnGap: 16, justifyItems: "center" }}
     >
-      {items.map((it, i) => {
+      {items.map((it) => {
         if (it.kind === "today") {
           return (
             <Link
@@ -45,7 +47,7 @@ export function PhotoGrid({ items, tz, rowGap = 16, label }: { items: GridItem[]
             </Link>
           );
         }
-        const s = slot(i);
+        const s = slot(photoIndex++);
         if (it.justNow) {
           return (
             <div role="listitem" key={it.photo.id} style={{ position: "relative" }} className="land">

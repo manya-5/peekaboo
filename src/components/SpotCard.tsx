@@ -63,7 +63,7 @@ export function SpotCard({ initial, name, tz }: { initial: Spot; name: string; t
 
   return (
     <DashedCard label="Today's spot" style={{ margin: "24px 22px 0 22px", padding: "20px 18px 10px 20px", gap: 14 }}>
-      <div key={spot.id} className="fade-in" style={{ display: "flex", flexDirection: "column", gap: 4, opacity: busy === "swap" ? 0.4 : 1, transition: "opacity 200ms" }}>
+      <div key={spot.id} className={spot.id !== initial.id ? "fade-in" : undefined} style={{ display: "flex", flexDirection: "column", gap: 4, opacity: busy === "swap" ? 0.4 : 1, transition: "opacity 200ms" }}>
         <div style={{ fontSize: 14, fontWeight: 500, color: c.action }}>Psst, {name}</div>
         <div style={{ fontSize: 34, fontWeight: 500, lineHeight: 1, letterSpacing: "-0.03em", color: c.ink }}>{spot.title}</div>
       </div>
