@@ -54,7 +54,8 @@ export async function draftSpot(profile: Profile, date: string, avoid: string[])
   const fallback = (): Draft => {
     const pool = FALLBACKS.filter((f) => !avoid.includes(f.title));
     const pick = (pool.length ? pool : FALLBACKS)[Math.floor(Math.random() * (pool.length || FALLBACKS.length))];
-    const win = pick.light === "golden" ? golden : { from: fromMinutes(toMinutes(weather.sunset) - 300), to: fromMinutes(toMinutes(weather.sunset) - 60) };
+    const half = (m: number) => fromMinutes(Math.round(m / 30) * 30);
+    const win = pick.light === "golden" ? golden : { from: half(toMinutes(weather.sunset) - 240), to: half(toMinutes(weather.sunset) - 60) };
     return { title: pick.title, spotting: pick.spotting, habitat: pick.habitat, best_from: win.from, best_to: win.to, nudge: "", contest_id: "" };
   };
 

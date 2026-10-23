@@ -37,13 +37,14 @@ Use it only to avoid references that won't land. Don't bring it up.`;
 }
 
 // If the newest Flash model is busy, step down to the next one.
-// Each model has its own free-tier quota, so stepping down also helps there.
-const MODELS = [...new Set([GEMINI_MODEL, "gemini-3.5-flash", "gemini-3-flash-preview"])];
+// Each model has its own free-tier quota (about 20 requests a day), so
+// stepping down also stretches the daily allowance. Flash Lite reads photos too.
+const MODELS = [...new Set([GEMINI_MODEL, "gemini-3.5-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"])];
 
 const busy = (e: unknown) => {
   const status = (e as { status?: number })?.status;
   const name = (e as { name?: string })?.name;
-  return status === 429 || status === 500 || status === 503 || status === 404 || name === "AbortError" || name === "TimeoutError";
+  return [403, 404, 429, 500, 503].includes(status ?? 0) || name === "AbortError" || name === "TimeoutError";
 };
 
 export async function askJson<T>(opts: { system: string; parts: Part[]; schema: object; temperature?: number }): Promise<T> {

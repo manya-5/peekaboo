@@ -1,0 +1,8 @@
+.next
+node_modules
+.env*
+supabase/seed-photos
+supabase/.temp
+designs
+scripts
+.claude

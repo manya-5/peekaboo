@@ -24,8 +24,10 @@ Short notes on calls I made while building, so you can change any of them.
 - **Photos bucket is private.** The app gives out signed links that expire after 6 hours.
 - **Spots keep their history.** A swap marks the old spot `swapped` and adds a new one. Not today marks it `skipped`. Each day shows the newest one.
 - **Unkept photos.** Retake deletes the photo and its file. A photo you leave on the Boo reacts screen without choosing stays in the database as `kept = false` and never shows anywhere.
-- **Location.** The profile is set to New York, since the sample photos are there. Weather uses those coordinates only. Your phone's location is never read or stored.
-- **Seed data.** October has the 9 sample photos, on the dates in the designs. "So far" counts real photos, so it reads 9, not 15. `bridge-today.jpg` is not seeded, so you can upload it in the demo and get the "Fourth time this month" reaction for real. Two sample matches are seeded (mushroom to Small wonders, tram to Street colour). Bridges and arches is left empty on purpose, so a real match fills it.
+- **Location.** The profile is set to Seattle (Pacific time), because that's where your photos are. Weather uses the city's coordinates only. Your phone's location is never read or stored.
+- **Seed data is your own photos.** October has your 22 photos. The 19 taken in October keep their real dates and times. The three from August (the sailboat at dusk, the marina, the grassy path) are placed on Oct 7, 9 and 14. Gemini wrote each description and set of tags, so Boo knows your habits (boats, red leaves, books held up against trees).
+- **Your photos stay out of GitHub.** They live in `supabase/seed-photos/` (ignored by git) and in the private Supabase bucket. Only their descriptions are in the code. The handoff's sample images are no longer used.
+- **Contest matches are real.** The seed script runs the app's own matcher on every photo, with no hand-picked matches. On the free tier some calls were rate limited, so a few photos may have missed a match they deserve (the Aurora Bridge didn't land in Bridges and arches). A new photo you keep runs the matcher again.
 
 ## AI
 
