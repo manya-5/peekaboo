@@ -1,6 +1,6 @@
 import "server-only";
 import { BUCKET, db, hasDb } from "./supabase";
-import { PROFILE_ID, SAMPLE_CONTESTS, SAMPLE_MATCHES, SAMPLE_PHOTOS, SAMPLE_PROFILE } from "./sample";
+import { PROFILE_ID, SAMPLE_CONTESTS, SAMPLE_PHOTOS, SAMPLE_PROFILE } from "./sample";
 import { monthStart, addDays, todayIn } from "./time";
 import type { Contest, ContestWithMatch, Photo, Profile, Spot } from "./types";
 
@@ -97,10 +97,9 @@ export async function getProfile(): Promise<Profile> {
 
 // ---------- Photos ----------
 
-const samplePhotos = (): Photo[] =>
-  [...SAMPLE_PHOTOS]
-    .reverse()
-    .map((p) => toPhoto({ ...p, kept: true, storage_path: `/images/${p.file}` }, `/images/${p.file}`));
+// The seed photos are personal and only live in the private bucket, so
+// without a database the roll is simply empty.
+const samplePhotos = (): Photo[] => [];
 
 // Kept photos in the month containing `dayIso`, newest first.
 export async function monthPhotos(profile: Profile, dayIso: string): Promise<Photo[]> {
@@ -210,17 +209,7 @@ export async function openContests(today: string): Promise<Contest[]> {
 }
 
 export async function contestsWithMatches(today: string): Promise<ContestWithMatch[]> {
-  if (!hasDb()) {
-    const photos = samplePhotos();
-    return SAMPLE_CONTESTS.map((r) => {
-      const m = SAMPLE_MATCHES.find((x) => x.contest_id === r.id);
-      const p = m && photos.find((x) => x.id === m.photo_id);
-      return {
-        ...toContest(r),
-        match: p ? { photoId: p.id, photoUrl: p.url, what: p.what, reason: m!.reason } : null,
-      };
-    });
-  }
+  if (!hasDb()) return SAMPLE_CONTESTS.map((r) => ({ ...toContest(r), match: null }));
   const contests = await openContests(today);
   if (!contests.length) return [];
   const { data, error } = await db()

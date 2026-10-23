@@ -42,3 +42,6 @@ next-env.d.ts
 
 # supabase cli
 supabase/.temp
+
+# personal photos used to seed the roll (kept out of git)
+supabase/seed-photos/*.jpg
