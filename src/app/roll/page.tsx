@@ -27,7 +27,7 @@ export default async function RollPage({ searchParams }: PageProps<"/roll">) {
       </header>
 
       <section aria-label={`${monthName(today)}, newest first`} style={{ padding: "30px 30px 0 30px" }}>
-        <PhotoGrid items={items} tz={profile.timezone} rowGap={18} label={`${monthName(today)} photos`} />
+        <PhotoGrid items={items} tz={profile.timezone} rowGap={18} from="roll" label={`${monthName(today)} photos`} />
       </section>
 
       {fresh && <RollNote photoId={fresh} />}

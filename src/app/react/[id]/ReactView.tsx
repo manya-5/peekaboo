@@ -14,13 +14,28 @@ export type Past = { id: string; url: string; date: string };
 
 type Reaction = { lines: string[]; craftNote: string | null; past: Past[] };
 
-export function ReactView({ photo, past, stamp }: { photo: Photo; past: Past[]; stamp: string }) {
+// "new": a photo just taken, with Retake / Keep it.
+// "view": a photo already on the roll, opened from a sticker, with Delete.
+export function ReactView({
+  photo,
+  past,
+  stamp,
+  mode = "new",
+  from = "/roll",
+}: {
+  photo: Photo;
+  past: Past[];
+  stamp: string;
+  mode?: "new" | "view";
+  from?: string;
+}) {
   const router = useRouter();
   const [reaction, setReaction] = useState<Reaction | null>(
     photo.booReaction?.length ? { lines: photo.booReaction, craftNote: photo.craftNote, past } : null,
   );
   const [failed, setFailed] = useState(false);
-  const [busy, setBusy] = useState<"keep" | "retake" | null>(null);
+  const [busy, setBusy] = useState<"keep" | "retake" | "delete" | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const asked = useRef(false);
 
   const ask = useCallback(async () => {
@@ -40,10 +55,10 @@ export function ReactView({ photo, past, stamp }: { photo: Photo; past: Past[]; 
   }, [photo.id]);
 
   useEffect(() => {
-    if (reaction || asked.current) return;
+    if (mode === "view" || reaction || asked.current) return;
     asked.current = true;
     ask();
-  }, [reaction, ask]);
+  }, [mode, reaction, ask]);
 
   async function keep() {
     setBusy("keep");
@@ -58,7 +73,19 @@ export function ReactView({ photo, past, stamp }: { photo: Photo; past: Past[]; 
     router.replace(photo.spotId ? `/shoot?spot=${photo.spotId}` : "/shoot");
   }
 
-  const looking = !reaction && !failed;
+  async function remove() {
+    setBusy("delete");
+    const res = await fetch(`/api/photos/${photo.id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.replace(from);
+      router.refresh();
+    } else {
+      setBusy(null);
+      setConfirming(false);
+    }
+  }
+
+  const looking = mode === "new" && !reaction && !failed;
   const repeat = reaction?.past ?? [];
 
   return (
@@ -136,6 +163,10 @@ export function ReactView({ photo, past, stamp }: { photo: Photo; past: Past[]; 
               </p>
             )}
           </div>
+        ) : mode === "view" ? (
+          photo.what && (
+            <p style={{ margin: "30px 30px 0", textAlign: "center", fontSize: 17, fontWeight: 300, lineHeight: 1.35, color: c.muted }}>{photo.what}</p>
+          )
         ) : failed ? (
           <div style={{ marginTop: 30, textAlign: "center", padding: "0 30px" }}>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 1.1 }}>I blinked.</h1>
@@ -151,22 +182,38 @@ export function ReactView({ photo, past, stamp }: { photo: Photo; past: Past[]; 
         )}
       </div>
 
-      <div
-        style={{
-          marginTop: "auto",
-          width: "100%",
-          padding: "28px 22px calc(30px + env(safe-area-inset-bottom)) 22px",
-          display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gap: 10,
-        }}
-      >
-        <OutlineButton onClick={retake} disabled={busy != null}>
-          Retake
-        </OutlineButton>
-        <PrimaryButton onClick={keep} disabled={busy != null}>
-          {busy === "keep" ? "Keeping..." : "Keep it"}
-        </PrimaryButton>
+      <div style={{ marginTop: "auto", width: "100%", padding: "28px 22px calc(30px + env(safe-area-inset-bottom)) 22px" }}>
+        {confirming && (
+          <p role="alert" className="fade-in" style={{ margin: "0 0 14px", textAlign: "center", fontSize: 15, color: c.muted }}>
+            Delete this photo? It goes for good, along with any contest match.
+          </p>
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+          {mode === "new" ? (
+            <>
+              <OutlineButton onClick={retake} disabled={busy != null}>
+                Retake
+              </OutlineButton>
+              <PrimaryButton onClick={keep} disabled={busy != null}>
+                {busy === "keep" ? "Keeping..." : "Keep it"}
+              </PrimaryButton>
+            </>
+          ) : confirming ? (
+            <>
+              <OutlineButton onClick={() => setConfirming(false)} disabled={busy != null}>
+                Cancel
+              </OutlineButton>
+              <PrimaryButton onClick={remove} disabled={busy != null}>
+                {busy === "delete" ? "Deleting..." : "Yes, delete"}
+              </PrimaryButton>
+            </>
+          ) : (
+            <>
+              <OutlineButton onClick={() => setConfirming(true)}>Delete</OutlineButton>
+              <PrimaryButton onClick={() => router.push(from)}>Done</PrimaryButton>
+            </>
+          )}
+        </div>
       </div>
     </main>
   );

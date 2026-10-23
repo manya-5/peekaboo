@@ -13,7 +13,19 @@ export function photoAlt(p: Photo, tz: string) {
 
 // The month as stickers, newest first. Shape and tilt follow the photo's place
 // in the month (newest is 0), the way the designs lay them out.
-export function PhotoGrid({ items, tz, rowGap = 16, label }: { items: GridItem[]; tz: string; rowGap?: number; label: string }) {
+export function PhotoGrid({
+  items,
+  tz,
+  rowGap = 16,
+  label,
+  from,
+}: {
+  items: GridItem[];
+  tz: string;
+  rowGap?: number;
+  label: string;
+  from: "home" | "roll";
+}) {
   let photoIndex = 0;
   return (
     <div
@@ -50,7 +62,7 @@ export function PhotoGrid({ items, tz, rowGap = 16, label }: { items: GridItem[]
         const s = slot(photoIndex++);
         if (it.justNow) {
           return (
-            <div role="listitem" key={it.photo.id} style={{ position: "relative" }} className="land">
+            <Link role="listitem" key={it.photo.id} href={`/photo/${it.photo.id}?from=${from}`} style={{ position: "relative", display: "block" }} className="land">
               <Sticker
                 src={it.photo.url}
                 alt={`Today, ${photoAlt(it.photo, tz)}`}
@@ -74,13 +86,13 @@ export function PhotoGrid({ items, tz, rowGap = 16, label }: { items: GridItem[]
               >
                 Just now
               </span>
-            </div>
+            </Link>
           );
         }
         return (
-          <div role="listitem" key={it.photo.id}>
+          <Link role="listitem" key={it.photo.id} href={`/photo/${it.photo.id}?from=${from}`} style={{ display: "block" }}>
             <Sticker src={it.photo.url} alt={photoAlt(it.photo, tz)} shape={s.shape} rotate={s.rotate} />
-          </div>
+          </Link>
         );
       })}
     </div>

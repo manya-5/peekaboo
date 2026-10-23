@@ -60,7 +60,7 @@ export default async function Home() {
             {photos.length ? `${photos.length} so far` : "A fresh month"}
           </span>
         </div>
-        <PhotoGrid items={items} tz={profile.timezone} label={`${monthName(today)} photos`} />
+        <PhotoGrid items={items} tz={profile.timezone} from="home" label={`${monthName(today)} photos`} />
       </section>
 
       <BottomNav />
