@@ -51,3 +51,4 @@ Short notes on calls I made while building, so you can change any of them.
 - `node scripts/connect-supabase.ts` finds the "peekaboo" project, writes its keys into `.env.local` and applies `supabase/schema.sql`.
 - `node --env-file=.env.local scripts/seed.ts` loads the October samples and contests.
 - `node --env-file=.env.local scripts/reset-demo.ts` removes photos you took and today's spots, so you can rehearse the demo from the start. It never touches the October samples.
+- **Commit email.** This repo commits as singh.manya520@gmail.com (your Vercel account), set only for this repo. With your work email, Vercel blocks deploys.
