@@ -101,23 +101,44 @@ export async function getProfile(): Promise<Profile> {
 // without a database the roll is simply empty.
 const samplePhotos = (): Photo[] => [];
 
-// Kept photos in the month containing `dayIso`, newest first.
-export async function monthPhotos(profile: Profile, dayIso: string): Promise<Photo[]> {
+// Kept photos with a local date from `fromIso` up to (not including) `toIso`, newest first.
+async function photosBetween(profile: Profile, fromIso: string, toIso: string): Promise<Photo[]> {
   if (!hasDb()) return samplePhotos();
-  const start = monthStart(dayIso);
-  const nextMonth = monthStart(addDays(start, 32));
   // Dates are local to the profile, so pad the window and filter after.
   const { data, error } = await db()
     .from("photos")
     .select("*")
     .eq("profile_id", profile.id)
     .eq("kept", true)
-    .gte("taken_at", `${addDays(start, -1)}T00:00:00Z`)
-    .lt("taken_at", `${addDays(nextMonth, 1)}T00:00:00Z`)
+    .gte("taken_at", `${addDays(fromIso, -1)}T00:00:00Z`)
+    .lt("taken_at", `${addDays(toIso, 1)}T00:00:00Z`)
     .order("taken_at", { ascending: false });
   if (error) throw error;
-  const inMonth = (data ?? []).filter((r) => todayIn(profile.timezone, new Date(r.taken_at)).slice(0, 7) === dayIso.slice(0, 7));
-  return withUrls(inMonth);
+  const inRange = (data ?? []).filter((r) => {
+    const d = todayIn(profile.timezone, new Date(r.taken_at));
+    return d >= fromIso && d < toIso;
+  });
+  return withUrls(inRange);
+}
+
+// Kept photos in the month containing `dayIso`, newest first.
+export async function monthPhotos(profile: Profile, dayIso: string): Promise<Photo[]> {
+  const start = monthStart(dayIso);
+  return photosBetween(profile, start, monthStart(addDays(start, 32)));
+}
+
+// Kept photos from the last `days` days, today included, newest first.
+export async function recentPhotos(profile: Profile, todayIso: string, days = 30): Promise<Photo[]> {
+  return photosBetween(profile, addDays(todayIso, -(days - 1)), addDays(todayIso, 1));
+}
+
+// Months ("2026-10") that have at least one kept photo, newest first.
+export async function photoMonths(profile: Profile): Promise<string[]> {
+  if (!hasDb()) return [];
+  const { data, error } = await db().from("photos").select("taken_at").eq("profile_id", profile.id).eq("kept", true);
+  if (error) throw error;
+  const months = new Set((data ?? []).map((r) => todayIn(profile.timezone, new Date(r.taken_at as string)).slice(0, 7)));
+  return [...months].sort().reverse();
 }
 
 export async function latestPhoto(profile: Profile): Promise<Photo | null> {

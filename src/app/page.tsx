@@ -2,10 +2,11 @@ import { BottomNav } from "@/components/BottomNav";
 import { PhotoGrid, type GridItem } from "@/components/PhotoGrid";
 import { SpotCard } from "@/components/SpotCard";
 import { Wordmark } from "@/components/Wordmark";
-import { getProfile, monthPhotos } from "@/lib/data";
+import Link from "next/link";
+import { getProfile, recentPhotos } from "@/lib/data";
 import { ensureSpot } from "@/lib/spot";
 import { c } from "@/lib/theme";
-import { headerDate, monthName, todayIn } from "@/lib/time";
+import { headerDate, todayIn } from "@/lib/time";
 import type { Spot } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export default async function Home() {
       console.error(e);
       return null;
     }),
-    monthPhotos(profile, today),
+    recentPhotos(profile, today, 30),
   ]);
   const shown = spot ?? { ...SAMPLE_SPOT, date: today };
 
@@ -53,14 +54,14 @@ export default async function Home() {
 
       <SpotCard initial={shown} name={profile.name} tz={profile.timezone} />
 
-      <section aria-label={`${monthName(today)}, newest first`} style={{ padding: "22px 30px 28px 30px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <section aria-label="Last 30 days, newest first" style={{ padding: "22px 30px 28px 30px", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <h2 style={{ margin: 0, fontWeight: 500, fontSize: 20, letterSpacing: "-0.01em", color: c.ink }}>{monthName(today)}</h2>
-          <span style={{ fontSize: 14, fontWeight: 300, color: c.muted2 }}>
-            {photos.length ? `${photos.length} so far` : "A fresh month"}
-          </span>
+          <h2 style={{ margin: 0, fontWeight: 500, fontSize: 20, letterSpacing: "-0.01em", color: c.ink }}>Last 30 days</h2>
+          <Link href="/roll" style={{ fontSize: 14, fontWeight: 400, color: c.action, textDecoration: "none" }}>
+            {photos.length ? `${photos.length} ${photos.length === 1 ? "photo" : "photos"} · All months` : "All months"}
+          </Link>
         </div>
-        <PhotoGrid items={items} tz={profile.timezone} from="home" label={`${monthName(today)} photos`} />
+        <PhotoGrid items={items} tz={profile.timezone} from="home" label="Photos from the last 30 days" />
       </section>
 
       <BottomNav />

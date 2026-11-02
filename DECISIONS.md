@@ -53,3 +53,4 @@ Short notes on calls I made while building, so you can change any of them.
 - `node --env-file=.env.local scripts/reset-demo.ts` removes photos you took and today's spots, so you can rehearse the demo from the start. It never touches the October samples.
 - **Commit email.** This repo commits as singh.manya520@gmail.com (your Vercel account), set only for this repo. With your work email, Vercel blocks deploys.
 - **Deleting photos.** Tap any sticker on Home or the roll to open it, then Delete. It asks once to confirm, then removes the file, the photo and its contest matches. Anyone with the link can do this, since there's no login.
+- **Last 30 days, not this month (Nov 2026).** Home and the Roll now show your last 30 days by default, so a new month never empties the screen. The Roll has tabs at the top: Last 30 days, then each month that has photos (November, October, ...). Home links to it with "All months".
